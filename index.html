@@ -22,6 +22,7 @@
                 --accent: #2563eb;
                 --accent-2: #1d4ed8;
                 --success: #22c55e;
+                --success-2: #16a34a;
                 --danger: #ef4444;
                 --ring: 0 0 0 2px var(--accent);
                 --radius: 22px;
@@ -51,7 +52,8 @@
                 --text: #1e293b;
                 --accent: #3b82f6;
                 --accent-2: #2563eb;
-                --success: #16a34a;
+                --success: #22c55e;
+                --success-2: #16a34a;
                 --danger: #dc2626;
                 --ring: 0 0 0 2px var(--accent);
                 --shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
@@ -231,8 +233,18 @@
                 color: var(--text);
             }
             .success {
-                background: linear-gradient(180deg, #22c55e, #16a34a);
+                background: linear-gradient(180deg, var(--success), var(--success-2));
                 box-shadow: 0 10px 20px rgba(34, 197, 94, 0.35);
+            }
+            .auto {
+                background: linear-gradient(180deg, var(--success), var(--success-2));
+                box-shadow: 0 10px 20px rgba(34, 197, 94, 0.35);
+            }
+            .auto.inactive {
+                background: var(--input-bg);
+                border: 1px solid var(--input-border);
+                box-shadow: none;
+                color: var(--text);
             }
             .danger {
                 background: linear-gradient(180deg, #ef4444, #dc2626);
@@ -422,6 +434,26 @@
                 font-size: 12px;
                 color: var(--muted);
             }
+            
+            .scale-display {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                font-size: 12px;
+                color: var(--muted);
+                padding: 0 8px;
+            }
+            
+            .scale-value {
+                font-weight: 600;
+                color: var(--success);
+                min-width: 20px;
+                text-align: center;
+            }
+            
+            .scale-display.manual .scale-value {
+                color: var(--accent);
+            }
         </style>
     </head>
     <body data-theme="dark">
@@ -431,10 +463,9 @@
                     <div class="brand">
                         <div class="logo" aria-hidden="true"></div>
                         <div>
-                            <h1>Mermaide</h1>
+                            <h1>Mermaid Live Previewer</h1>
                             <div class="sub">
-                                Dark mode • Blue accent • Export high-quality
-                                PNG
+                                Dark mode • Blue accent • Auto-scale PNG export
                             </div>
                         </div>
                     </div>
@@ -479,8 +510,18 @@
                             <option value="7">7×</option>
                             <option value="8">8×</option>
                             <option value="9">9×</option>
-                            <option value="10" selected>10×</option>
+                            <option value="10">10×</option>
                         </select>
+                        
+                        <div class="scale-display" id="scaleDisplay">
+                            <span>Scale:</span>
+                            <span class="scale-value" id="scaleValue">10</span>
+                            <span>×</span>
+                        </div>
+                        
+                        <button id="autoScale" class="auto" title="Auto-select optimal scale">
+                            Auto
+                        </button>
                         <button id="downloadPng" class="success">
                             Download PNG
                         </button>
@@ -613,6 +654,9 @@
             const downloadBtn = document.getElementById("downloadPng");
             const downloadSvgBtn = document.getElementById("downloadSvg");
             const scaleSel = document.getElementById("scale");
+            const autoScaleBtn = document.getElementById("autoScale");
+            const scaleDisplay = document.getElementById("scaleDisplay");
+            const scaleValue = document.getElementById("scaleValue");
             const chips = document.querySelectorAll(".chip");
             const themeToggle = document.getElementById("themeToggle");
             const body = document.body;
@@ -621,6 +665,8 @@
             let lastSVG = "";
             let lastTitle = "mermaid-chart";
             let currentTheme = "dark";
+            let autoScaleEnabled = true;
+            let lastCalculatedScale = 10;
 
             // ---------- Templates ----------
             const TEMPLATES = {
@@ -711,6 +757,38 @@
                     .replace(/^-+|-+$/g, "");
             }
 
+            // ---------- Auto Scale Calculation ----------
+            function calculateOptimalScale(svgText) {
+                const { width, height } = getSvgDimensions(svgText);
+                
+                // Browser canvas size limits (conservative estimate)
+                const maxCanvasSize = 16000; // Conservative limit for most browsers
+                
+                // Calculate the maximum scale that fits within browser limits
+                const maxScaleByWidth = Math.floor(maxCanvasSize / width);
+                const maxScaleByHeight = Math.floor(maxCanvasSize / height);
+                
+                // Use the smaller of the two to ensure both dimensions fit
+                let optimalScale = Math.min(maxScaleByWidth, maxScaleByHeight);
+                
+                // Clamp between 1 and 10
+                optimalScale = Math.max(1, Math.min(10, optimalScale));
+                
+                return optimalScale;
+            }
+            
+            function updateScaleDisplay() {
+                if (autoScaleEnabled) {
+                    scaleValue.textContent = lastCalculatedScale;
+                    scaleDisplay.classList.remove("manual");
+                    scaleSel.value = lastCalculatedScale;
+                } else {
+                    const selectedScale = parseInt(scaleSel.value, 10);
+                    scaleValue.textContent = selectedScale;
+                    scaleDisplay.classList.add("manual");
+                }
+            }
+
             // ---------- Theme Switching ----------
             function toggleTheme() {
                 currentTheme = currentTheme === "dark" ? "light" : "dark";
@@ -720,7 +798,7 @@
                 if (currentTheme === "light") {
                     mermaid.initialize(lightMermaidConfig);
                     subTitle.textContent =
-                        "Light mode • Blue accent • Export high-quality PNG";
+                        "Light mode • Blue accent • Auto-scale PNG export";
                 } else {
                     mermaid.initialize({
                         startOnLoad: false,
@@ -750,7 +828,7 @@
                         fontFamily: "Inter, ui-sans-serif, system-ui",
                     });
                     subTitle.textContent =
-                        "Dark mode • Blue accent • Export high-quality PNG";
+                        "Dark mode • Blue accent • Auto-scale PNG export";
                 }
 
                 // Re-render the diagram with the new theme
@@ -785,6 +863,13 @@
                             .find((l) => !l.trim().startsWith("%%")) ||
                         "mermaid-chart";
                     lastTitle = sanitizeTitle(firstLine.slice(0, 60));
+                    
+                    // Calculate optimal scale when auto mode is enabled
+                    if (autoScaleEnabled && svg) {
+                        lastCalculatedScale = calculateOptimalScale(svg);
+                        updateScaleDisplay();
+                    }
+                    
                     setStatus('<span class="ok">Rendered.</span>');
                 } catch (err) {
                     console.error(err);
@@ -825,7 +910,7 @@
                 };
             }
 
-            // ✅ FIX: use data: URL + crossOrigin=anonymous to avoid tainted canvas
+            // ✅ FIXED: Improved PNG export with canvas size limits
             function svgToPng(
                 svgText,
                 scale = 10,
@@ -833,39 +918,64 @@
                 bg = "#0b1220"
             ) {
                 const { width, height } = getSvgDimensions(svgText);
+                
+                // Check for browser canvas size limits
+                const maxCanvasSize = 32767; // Most browsers have this limit
+                const scaledWidth = Math.max(1, Math.round(width * scale));
+                const scaledHeight = Math.max(1, Math.round(height * scale));
+                
+                if (scaledWidth > maxCanvasSize || scaledHeight > maxCanvasSize) {
+                    alert(`Canvas dimensions (${scaledWidth}×${scaledHeight}) exceed browser limits. Try a lower scale.`);
+                    return;
+                }
+                
                 const svgDataUrl =
                     "data:image/svg+xml;charset=utf-8," +
                     encodeURIComponent(svgText);
                 const img = new Image();
                 img.crossOrigin = "anonymous";
                 img.decoding = "sync";
+                
                 img.onload = () => {
                     const canvas = document.createElement("canvas");
-                    canvas.width = Math.max(1, Math.round(width * scale));
-                    canvas.height = Math.max(1, Math.round(height * scale));
+                    canvas.width = scaledWidth;
+                    canvas.height = scaledHeight;
                     const ctx = canvas.getContext("2d");
-                    // Solid background for non-transparent PNGs
-                    ctx.fillStyle =
-                        currentTheme === "dark" ? "#0b1220" : "#ffffff";
+                    
+                    // Set background color based on theme
+                    ctx.fillStyle = currentTheme === "dark" ? "#0b1220" : "#ffffff";
                     ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    
+                    // Enable high-quality image rendering
                     ctx.imageSmoothingEnabled = true;
                     ctx.imageSmoothingQuality = "high";
+                    
+                    // Draw the SVG image
                     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    
+                    // Convert to PNG blob and download
                     canvas.toBlob((blob) => {
+                        if (!blob) {
+                            alert("Failed to create PNG. Try a lower scale or simpler diagram.");
+                            return;
+                        }
+                        
                         const a = document.createElement("a");
                         a.href = URL.createObjectURL(blob);
                         a.download = filename;
                         document.body.appendChild(a);
                         a.click();
-                        a.remove();
-                        // URL.revokeObjectURL(a.href); // safe to let GC handle shortly
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(a.href);
                     }, "image/png");
                 };
+                
                 img.onerror = () => {
                     alert(
                         "Could not rasterize SVG. Try a lower scale or simpler diagram."
                     );
                 };
+                
                 img.src = svgDataUrl;
             }
 
@@ -879,7 +989,7 @@
                 a.download = filename;
                 document.body.appendChild(a);
                 a.click();
-                a.remove();
+                document.body.removeChild(a);
                 URL.revokeObjectURL(url);
             }
 
@@ -912,12 +1022,34 @@
                 editor.focus();
             });
 
+            // Auto scale toggle
+            autoScaleBtn.addEventListener("click", () => {
+                autoScaleEnabled = !autoScaleEnabled;
+                
+                if (autoScaleEnabled) {
+                    autoScaleBtn.classList.remove("inactive");
+                    autoScaleBtn.classList.add("auto");
+                    // Recalculate optimal scale
+                    if (lastSVG) {
+                        lastCalculatedScale = calculateOptimalScale(lastSVG);
+                    }
+                } else {
+                    autoScaleBtn.classList.remove("auto");
+                    autoScaleBtn.classList.add("inactive");
+                }
+                
+                updateScaleDisplay();
+            });
+
             downloadBtn.addEventListener("click", () => {
                 if (!lastSVG) {
                     alert("Nothing to export yet. Type some Mermaid code.");
                     return;
                 }
-                const scale = parseInt(scaleSel.value, 10) || 10;
+                
+                const scale = autoScaleEnabled ? 
+                    lastCalculatedScale : parseInt(scaleSel.value, 10);
+                    
                 svgToPng(
                     lastSVG,
                     scale,
@@ -932,6 +1064,13 @@
                     return;
                 }
                 downloadSVG(lastSVG, `${lastTitle || "mermaid-chart"}.svg`);
+            });
+
+            // Update scale display when manual scale is changed
+            scaleSel.addEventListener("change", () => {
+                if (!autoScaleEnabled) {
+                    updateScaleDisplay();
+                }
             });
 
             themeToggle.addEventListener("click", toggleTheme);
@@ -950,6 +1089,7 @@
             // ---------- Boot ----------
             editor.value = TEMPLATES.flowchart;
             renderMermaid(editor.value);
+            updateScaleDisplay();
         </script>
     </body>
 </html>
