@@ -1,1095 +1,2073 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <title>Mermaid Live Previewer — Light/Dark Mode</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <!-- Mermaid -->
-        <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
-        <!-- Inter font (optional, modern feel) -->
-        <link
-            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap"
-            rel="stylesheet"
-        />
-        <link rel="shortcut icon" href="./favicon.ico" type="image/x-icon" />
-        <style>
-            @import url("https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap");
-            :root {
-                --bg: #0b1220;
-                --panel: #0f172a;
-                --muted: #94a3b8;
-                --text: #e5e7eb;
-                --accent: #2563eb;
-                --accent-2: #1d4ed8;
-                --success: #22c55e;
-                --success-2: #16a34a;
-                --danger: #ef4444;
-                --ring: 0 0 0 2px var(--accent);
-                --radius: 22px;
-                --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
-                --shadow-soft: 0 6px 18px rgba(0, 0, 0, 0.25);
-                --preview-bg: #0b1220;
-                --editor-bg: #0b1220;
-                --header-bg: linear-gradient(
-                    to bottom,
-                    rgba(11, 18, 32, 0.9),
-                    rgba(11, 18, 32, 0.6)
-                );
-                --header-border: rgba(148, 163, 184, 0.15);
-                --panel-border: rgba(148, 163, 184, 0.15);
-                --input-bg: #0b1220;
-                --input-border: rgba(148, 163, 184, 0.18);
-                --chip-border: rgba(148, 163, 184, 0.25);
-                --chip-color: #93c5fd;
-                --kbd-border: rgba(148, 163, 184, 0.3);
-                --kbd-color: #cbd5e1;
-            }
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mermaide - Professional Diagram Editor</title>
 
-            [data-theme="light"] {
-                --bg: #f8fafc;
-                --panel: #ffffff;
-                --muted: #64748b;
-                --text: #1e293b;
-                --accent: #3b82f6;
-                --accent-2: #2563eb;
-                --success: #22c55e;
-                --success-2: #16a34a;
-                --danger: #dc2626;
-                --ring: 0 0 0 2px var(--accent);
-                --shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-                --shadow-soft: 0 6px 18px rgba(0, 0, 0, 0.05);
-                --preview-bg: #ffffff;
-                --editor-bg: #f1f5f9;
-                --header-bg: linear-gradient(
-                    to bottom,
-                    rgba(248, 250, 252, 0.9),
-                    rgba(248, 250, 252, 0.6)
-                );
-                --header-border: rgba(148, 163, 184, 0.2);
-                --panel-border: rgba(148, 163, 184, 0.2);
-                --input-bg: #f1f5f9;
-                --input-border: rgba(148, 163, 184, 0.25);
-                --chip-border: rgba(148, 163, 184, 0.35);
-                --chip-color: #3b82f6;
-                --kbd-border: rgba(148, 163, 184, 0.4);
-                --kbd-color: #475569;
-            }
+    <!-- Mermaid.js -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
 
-            * {
-                box-sizing: border-box;
-                font-family: "Open Sans", sans-serif;
-                transition: background-color 0.3s ease, color 0.3s ease,
-                    border-color 0.3s ease;
-            }
-            html,
-            body {
-                height: 100%;
-            }
-            body {
-                margin: 0;
-                background: radial-gradient(
-                        1200px 600px at 15% -10%,
-                        rgba(37, 99, 235, 0.15),
-                        transparent 60%
-                    ),
-                    radial-gradient(
-                        1000px 800px at 110% 20%,
-                        rgba(2, 132, 199, 0.12),
-                        transparent 60%
-                    ),
-                    var(--bg);
-                color: var(--text);
-                font-family: Inter, ui-sans-serif, system-ui, -apple-system,
-                    Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji",
-                    "Segoe UI Emoji";
-                line-height: 1.55;
-            }
+    <!-- Monaco Editor -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs/loader.min.js"></script>
 
-            [data-theme="light"] body {
-                background: radial-gradient(
-                        1200px 600px at 15% -10%,
-                        rgba(59, 130, 246, 0.08),
-                        transparent 60%
-                    ),
-                    radial-gradient(
-                        1000px 800px at 110% 20%,
-                        rgba(2, 132, 199, 0.06),
-                        transparent 60%
-                    ),
-                    var(--bg);
-            }
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
-            header {
-                position: sticky;
-                top: 0;
-                z-index: 20;
-                backdrop-filter: saturate(120%) blur(10px);
-                background: var(--header-bg);
-                border-bottom: 1px solid var(--header-border);
-            }
-            .wrap {
-                max-width: 1200px;
-                margin: 0 auto;
-                padding: 18px 18px;
-            }
-            .brand {
-                display: flex;
-                align-items: center;
-                gap: 12px;
-            }
-            .logo {
-                width: 36px;
-                height: 36px;
-                border-radius: 12px;
-                background: conic-gradient(
-                    from 140deg,
-                    var(--accent),
-                    #38bdf8 50%,
-                    #0ea5e9 75%,
-                    var(--accent)
-                );
-                box-shadow: inset 0 0 1px rgba(255, 255, 255, 0.6),
-                    0 10px 20px rgba(37, 99, 235, 0.25);
-            }
-            h1 {
-                font-size: 20px;
-                margin: 0;
-                letter-spacing: 0.2px;
-            }
-            .sub {
-                color: var(--muted);
-                font-size: 12px;
-                margin-top: -2px;
-            }
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-            .toolbar {
-                display: flex;
-                flex-wrap: wrap;
-                gap: 10px;
-                align-items: center;
-                margin-top: 12px;
-            }
-            .toolbar .group {
-                background: rgba(15, 23, 42, 0.7);
-                border: 1px solid var(--panel-border);
-                border-radius: 14px;
-                padding: 8px;
-                display: flex;
-                gap: 8px;
-                align-items: center;
-                box-shadow: var(--shadow-soft);
-            }
+    <link rel="shortcut icon" href="./favicon.ico" type="image/x-icon">
 
-            [data-theme="light"] .toolbar .group {
-                background: rgba(255, 255, 255, 0.7);
-            }
+    <style>
+        :root {
+            /* Dark Theme */
+            --bg-primary: #0a0e1a;
+            --bg-secondary: #0f1419;
+            --bg-tertiary: #1a1f2e;
+            --bg-glass: rgba(15, 20, 25, 0.8);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --border-accent: rgba(99, 102, 241, 0.3);
+            --text-primary: #e5e7eb;
+            --text-secondary: #9ca3af;
+            --text-muted: #6b7280;
+            --accent-primary: #6366f1;
+            --accent-secondary: #8b5cf6;
+            --accent-success: #10b981;
+            --accent-warning: #f59e0b;
+            --accent-danger: #ef4444;
+            --accent-info: #3b82f6;
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.15);
+            --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.25);
+            --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.35);
+            --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.45);
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --radius-xl: 20px;
+        }
 
-            label {
-                font-size: 12px;
-                color: var(--muted);
+        [data-theme="light"] {
+            --bg-primary: #f8fafc;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #f1f5f9;
+            --bg-glass: rgba(255, 255, 255, 0.8);
+            --border-color: rgba(0, 0, 0, 0.08);
+            --border-accent: rgba(99, 102, 241, 0.3);
+            --text-primary: #1e293b;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --accent-primary: #6366f1;
+            --accent-secondary: #8b5cf6;
+            --accent-success: #10b981;
+            --accent-warning: #f59e0b;
+            --accent-danger: #ef4444;
+            --accent-info: #3b82f6;
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
+            --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.12);
+            --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            overflow: hidden;
+            height: 100vh;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        /* Header */
+        .header {
+            background: var(--bg-glass);
+            backdrop-filter: blur(20px) saturate(180%);
+            border-bottom: 1px solid var(--border-color);
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            z-index: 1000;
+            position: relative;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+
+        .logo i {
+            color: white;
+            font-size: 20px;
+        }
+
+        .brand {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .brand-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: -0.5px;
+        }
+
+        .brand-subtitle {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        /* Toolbar */
+        .toolbar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            flex: 1;
+            justify-content: center;
+        }
+
+        .toolbar-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 6px;
+        }
+
+        .btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            padding: 8px 14px;
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+
+        .btn:hover {
+            background: var(--bg-glass);
+            color: var(--text-primary);
+            transform: translateY(-1px);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: white;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #7c3aed, var(--accent-primary));
+            color: white;
+            box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--accent-success), #059669);
+            color: white;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-success:hover {
+            background: linear-gradient(135deg, #059669, var(--accent-success));
+            color: white;
+            box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, var(--accent-danger), #dc2626);
+            color: white;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-icon {
+            padding: 8px;
+            min-width: 36px;
+            justify-content: center;
+        }
+
+        .select {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 8px 12px;
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .select:focus {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        /* Theme Toggle */
+        .theme-toggle {
+            width: 50px;
+            height: 26px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 13px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .theme-toggle::before {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            top: 2px;
+            left: 3px;
+            transition: transform 0.3s ease;
+            box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+        }
+
+        [data-theme="light"] .theme-toggle::before {
+            transform: translateX(24px);
+        }
+
+        /* Main Container */
+        .container {
+            display: flex;
+            height: calc(100vh - 65px);
+            position: relative;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar.collapsed {
+            transform: translateX(-280px);
+        }
+
+        .sidebar-header {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .sidebar-content {
+            overflow-y: auto;
+            flex: 1;
+            padding: 12px;
+        }
+
+        .template-category {
+            margin-bottom: 20px;
+        }
+
+        .category-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+            padding: 0 8px;
+        }
+
+        .template-item {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 12px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .template-item:hover {
+            background: var(--bg-glass);
+            border-color: var(--border-accent);
+            transform: translateX(4px);
+        }
+
+        .template-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .template-desc {
+            font-size: 11px;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Split Panes */
+        .split-container {
+            flex: 1;
+            display: flex;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .pane {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background: var(--bg-secondary);
+        }
+
+        .pane-editor {
+            width: 50%;
+            border-right: 1px solid var(--border-color);
+        }
+
+        .pane-preview {
+            width: 50%;
+        }
+
+        .pane-header {
+            background: var(--bg-tertiary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            min-height: 42px;
+        }
+
+        .pane-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .pane-actions {
+            display: flex;
+            gap: 4px;
+        }
+
+        .pane-content {
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Monaco Editor Container */
+        #editor-container {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Preview */
+        .preview-container {
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background: var(--bg-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .preview-content {
+            transform-origin: center;
+            transition: transform 0.2s ease;
+        }
+
+        .preview-empty {
+            color: var(--text-muted);
+            font-size: 14px;
+            text-align: center;
+            padding: 40px;
+        }
+
+        /* Zoom Controls */
+        .zoom-controls {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: var(--bg-glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 8px;
+            display: flex;
+            gap: 4px;
+            box-shadow: var(--shadow-md);
+        }
+
+        .zoom-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            padding: 6px 10px;
+            border-radius: var(--radius-sm);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .zoom-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+
+        .zoom-level {
+            padding: 6px 12px;
+            color: var(--text-primary);
+            font-size: 12px;
+            font-weight: 600;
+            min-width: 60px;
+            text-align: center;
+        }
+
+        /* Resizer */
+        .resizer {
+            width: 4px;
+            background: transparent;
+            cursor: col-resize;
+            position: relative;
+            z-index: 10;
+        }
+
+        .resizer:hover,
+        .resizer.resizing {
+            background: var(--accent-primary);
+        }
+
+        /* Status Bar */
+        .status-bar {
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-color);
+            padding: 6px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 11px;
+            color: var(--text-muted);
+            min-height: 30px;
+        }
+
+        .status-left,
+        .status-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-success {
+            color: var(--accent-success);
+        }
+
+        .status-error {
+            color: var(--accent-danger);
+        }
+
+        /* Modal */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-xl);
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow: hidden;
+            box-shadow: var(--shadow-xl);
+            animation: slideUp 0.3s ease;
+        }
+
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .modal-close {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 20px;
+            cursor: pointer;
+            padding: 4px;
+            width: 32px;
+            height: 32px;
+            border-radius: var(--radius-sm);
+            transition: all 0.2s ease;
+        }
+
+        .modal-close:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .modal-body {
+            padding: 24px;
+            overflow-y: auto;
+            max-height: calc(80vh - 140px);
+        }
+
+        /* Keyboard Shortcuts */
+        .shortcut-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .shortcut-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px;
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-md);
+        }
+
+        .shortcut-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .shortcut-keys {
+            display: flex;
+            gap: 4px;
+        }
+
+        .key {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-primary);
+            min-width: 28px;
+            text-align: center;
+        }
+
+        /* Settings */
+        .setting-item {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .setting-item:last-child {
+            border-bottom: none;
+        }
+
+        .setting-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .setting-description {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .setting-control {
+            display: flex;
+            gap: 8px;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
             }
-            select,
-            button,
-            input[type="number"] {
-                appearance: none;
-                color: var(--text);
-                background: var(--input-bg);
-                border: 1px solid var(--input-border);
-                border-radius: 12px;
-                padding: 10px 12px;
-                font: inherit;
-                outline: none;
-            }
-            select:focus,
-            input[type="number"]:focus {
-                box-shadow: var(--ring);
-                border-color: transparent;
-            }
-            button {
-                background: linear-gradient(
-                    180deg,
-                    var(--accent),
-                    var(--accent-2)
-                );
-                border: none;
-                cursor: pointer;
-                font-weight: 700;
-                letter-spacing: 0.2px;
-                transition: 0.2s transform, 0.2s filter;
-                box-shadow: 0 10px 20px rgba(37, 99, 235, 0.35);
-                color: white;
-            }
-            button:hover {
-                transform: translateY(-1px);
-            }
-            button:active {
+            to {
+                opacity: 1;
                 transform: translateY(0);
             }
-            .ghost {
-                background: transparent;
-                border: 1px solid var(--input-border);
-                box-shadow: none;
-                font-weight: 600;
-                color: var(--text);
+        }
+
+        /* Toast Notifications */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 3000;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .toast {
+            background: var(--bg-glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 14px 18px;
+            min-width: 300px;
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: slideInRight 0.3s ease;
+        }
+
+        .toast-success {
+            border-left: 3px solid var(--accent-success);
+        }
+
+        .toast-error {
+            border-left: 3px solid var(--accent-danger);
+        }
+
+        .toast-info {
+            border-left: 3px solid var(--accent-info);
+        }
+
+        .toast-icon {
+            font-size: 18px;
+        }
+
+        .toast-success .toast-icon {
+            color: var(--accent-success);
+        }
+
+        .toast-error .toast-icon {
+            color: var(--accent-danger);
+        }
+
+        .toast-info .toast-icon {
+            color: var(--accent-info);
+        }
+
+        .toast-message {
+            flex: 1;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(100px);
             }
-            .success {
-                background: linear-gradient(180deg, var(--success), var(--success-2));
-                box-shadow: 0 10px 20px rgba(34, 197, 94, 0.35);
+            to {
+                opacity: 1;
+                transform: translateX(0);
             }
-            .auto {
-                background: linear-gradient(180deg, var(--success), var(--success-2));
-                box-shadow: 0 10px 20px rgba(34, 197, 94, 0.35);
-            }
-            .auto.inactive {
-                background: var(--input-bg);
-                border: 1px solid var(--input-border);
-                box-shadow: none;
-                color: var(--text);
-            }
-            .danger {
-                background: linear-gradient(180deg, #ef4444, #dc2626);
-                box-shadow: 0 10px 20px rgba(239, 68, 68, 0.28);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .toolbar {
+                justify-content: flex-start;
             }
 
-            main {
-                max-width: 1200px;
-                margin: 20px auto;
-                padding: 0 18px 40px;
-            }
-            .grid {
-                display: grid;
-                gap: 16px;
-                grid-template-columns: 1fr;
-            }
-            @media (min-width: 960px) {
-                .grid {
-                    grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
-                }
-            }
-
-            .panel {
-                background: linear-gradient(
-                    180deg,
-                    rgba(15, 23, 42, 0.95),
-                    rgba(15, 23, 42, 0.85)
-                );
-                border: 1px solid var(--panel-border);
-                border-radius: var(--radius);
-                box-shadow: var(--shadow);
-                overflow: hidden;
-            }
-
-            [data-theme="light"] .panel {
-                background: linear-gradient(
-                    180deg,
-                    rgba(255, 255, 255, 0.95),
-                    rgba(255, 255, 255, 0.85)
-                );
-            }
-
-            .panel header {
-                position: static;
-                background: transparent;
-                backdrop-filter: none;
-                border: none;
-                padding: 14px 16px;
-                border-bottom: 1px solid var(--panel-border);
-            }
-            .panel h2 {
-                font-size: 14px;
-                margin: 0;
-                color: #cbd5e1;
-                letter-spacing: 0.3px;
-            }
-
-            [data-theme="light"] .panel h2 {
-                color: #475569;
-            }
-
-            .panel .body {
-                padding: 14px;
-            }
-            textarea {
-                width: 100%;
-                min-height: 420px;
-                resize: vertical;
-                background: var(--editor-bg);
-                color: var(--text);
-                border: 1px solid var(--input-border);
-                border-radius: 14px;
-                padding: 14px 14px 40px 14px;
-                line-height: 1.45;
-                font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, Monaco,
-                    Consolas, "Liberation Mono", "Courier New", monospace;
-                outline: none;
-                box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.08);
-            }
-            textarea:focus {
-                box-shadow: var(--ring);
-            }
-            .helper {
-                display: flex;
-                justify-content: space-between;
-                gap: 10px;
-                align-items: center;
-                margin-top: 10px;
-                color: var(--muted);
-                font-size: 12px;
-            }
-            .chips {
-                display: flex;
-                gap: 8px;
+            .toolbar-group {
                 flex-wrap: wrap;
             }
-            .chip {
-                padding: 6px 10px;
-                border-radius: 999px;
-                border: 1px dashed var(--chip-border);
-                color: var(--chip-color);
-                cursor: pointer;
-                user-select: none;
-            }
-            .chip:hover {
-                border-style: solid;
-            }
 
-            .preview-wrap {
-                position: relative;
-                overflow: auto;
-                background: var(--preview-bg);
-                border: 1px solid var(--input-border);
-                border-radius: 14px;
-                padding: 10px;
-                min-height: 420px;
-            }
-            .preview-wrap svg {
-                display: block;
-                margin: auto;
-                height: auto;
-                max-width: 100%;
-            }
-            .status {
-                margin-top: 10px;
-                font-size: 12px;
-                color: var(--muted);
-            }
-            .status .ok {
-                color: var(--success);
-            }
-            .status .err {
-                color: #fca5a5;
-            }
-
-            [data-theme="light"] .status .err {
-                color: #dc2626;
-            }
-
-            .footer-note {
-                text-align: center;
-                color: var(--muted);
-                font-size: 12px;
-                margin-top: 28px;
-            }
-
-            .kbd {
-                border: 1px solid var(--kbd-border);
-                padding: 2px 6px;
-                border-radius: 6px;
-                font-size: 11px;
-                color: var(--kbd-color);
-            }
-
-            .theme-toggle {
-                background: var(--input-bg);
-                border: 1px solid var(--input-border);
-                border-radius: 20px;
-                width: 44px;
-                height: 24px;
-                position: relative;
-                cursor: pointer;
-                margin-left: auto;
-            }
-
-            .theme-toggle::before {
-                content: "";
+            .sidebar {
                 position: absolute;
-                width: 18px;
-                height: 18px;
-                border-radius: 50%;
-                background: var(--accent);
-                top: 2px;
-                left: 3px;
-                transition: transform 0.3s ease;
+                left: 0;
+                top: 0;
+                height: 100%;
+                z-index: 100;
             }
 
-            [data-theme="light"] .theme-toggle::before {
-                transform: translateX(20px);
+            .split-container {
+                flex-direction: column;
             }
 
-            .theme-container {
-                display: flex;
-                align-items: center;
-                gap: 10px;
-                margin-left: auto;
-                font-size: 12px;
-                color: var(--muted);
+            .pane-editor,
+            .pane-preview {
+                width: 100% !important;
+                height: 50%;
             }
-            
-            .scale-display {
-                display: flex;
-                align-items: center;
-                gap: 6px;
-                font-size: 12px;
-                color: var(--muted);
-                padding: 0 8px;
+
+            .resizer {
+                width: 100%;
+                height: 4px;
+                cursor: row-resize;
             }
-            
-            .scale-value {
-                font-weight: 600;
-                color: var(--success);
-                min-width: 20px;
-                text-align: center;
+
+            .shortcut-grid {
+                grid-template-columns: 1fr;
             }
-            
-            .scale-display.manual .scale-value {
-                color: var(--accent);
-            }
-        </style>
-    </head>
-    <body data-theme="dark">
-        <header>
-            <div class="wrap">
-                <div style="display: flex; align-items: center">
-                    <div class="brand">
-                        <div class="logo" aria-hidden="true"></div>
-                        <div>
-                            <h1>Mermaid Live Previewer</h1>
-                            <div class="sub">
-                                Dark mode • Blue accent • Auto-scale PNG export
-                            </div>
-                        </div>
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            border: 3px solid var(--border-color);
+            border-top: 3px solid var(--accent-primary);
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--bg-tertiary);
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--border-color);
+        }
+
+        /* Search Box */
+        .search-box {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 10px 14px;
+            font-size: 13px;
+            color: var(--text-primary);
+            width: 100%;
+            margin-bottom: 12px;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .search-box:focus {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .search-box::placeholder {
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+<body data-theme="dark">
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="logo-section">
+            <div class="logo">
+                <i class="fas fa-diagram-project"></i>
+            </div>
+            <div class="brand">
+                <div class="brand-title">Mermaide</div>
+                <div class="brand-subtitle">Professional Diagram Editor</div>
+            </div>
+        </div>
+
+        <div class="toolbar">
+            <div class="toolbar-group">
+                <button class="btn btn-icon" id="toggleSidebar" title="Toggle Templates (Ctrl+B)">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <select class="select" id="diagramType">
+                    <option value="flowchart">Flowchart</option>
+                    <option value="sequence">Sequence</option>
+                    <option value="class">Class</option>
+                    <option value="state">State</option>
+                    <option value="er">ER Diagram</option>
+                    <option value="gantt">Gantt</option>
+                    <option value="journey">User Journey</option>
+                    <option value="pie">Pie Chart</option>
+                    <option value="git">Git Graph</option>
+                    <option value="mindmap">Mind Map</option>
+                    <option value="timeline">Timeline</option>
+                    <option value="quadrant">Quadrant Chart</option>
+                    <option value="requirement">Requirement</option>
+                    <option value="sankey">Sankey</option>
+                    <option value="xy">XY Chart</option>
+                </select>
+                <button class="btn" id="insertTemplate">
+                    <i class="fas fa-plus"></i> Insert
+                </button>
+            </div>
+
+            <div class="toolbar-group">
+                <button class="btn btn-primary" id="exportPng">
+                    <i class="fas fa-image"></i> PNG
+                </button>
+                <button class="btn" id="exportSvg">
+                    <i class="fas fa-file-code"></i> SVG
+                </button>
+                <button class="btn" id="exportPdf">
+                    <i class="fas fa-file-pdf"></i> PDF
+                </button>
+                <button class="btn" id="copyClipboard">
+                    <i class="fas fa-copy"></i> Copy
+                </button>
+                <button class="btn" id="shareUrl">
+                    <i class="fas fa-share-nodes"></i> Share
+                </button>
+            </div>
+
+            <div class="toolbar-group">
+                <button class="btn btn-icon" id="settingsBtn" title="Settings (Ctrl+,)">
+                    <i class="fas fa-gear"></i>
+                </button>
+                <button class="btn btn-icon" id="shortcutsBtn" title="Shortcuts (Ctrl+/)">
+                    <i class="fas fa-keyboard"></i>
+                </button>
+                <div class="theme-toggle" id="themeToggle" title="Toggle Theme (Ctrl+Shift+T)"></div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <span><i class="fas fa-layer-group"></i> Templates</span>
+                <button class="btn btn-icon" id="closeSidebar">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="sidebar-content">
+                <input type="text" class="search-box" id="templateSearch" placeholder="Search templates...">
+
+                <div class="template-category">
+                    <div class="category-title">Basic Diagrams</div>
+                    <div class="template-item" data-template="flowchart">
+                        <div class="template-name"><i class="fas fa-project-diagram"></i> Flowchart</div>
+                        <div class="template-desc">Process flows and decision trees</div>
                     </div>
-
-                    <div class="theme-container">
-                        <span>Dark</span>
-                        <div class="theme-toggle" id="themeToggle"></div>
-                        <span>Light</span>
+                    <div class="template-item" data-template="sequence">
+                        <div class="template-name"><i class="fas fa-exchange-alt"></i> Sequence Diagram</div>
+                        <div class="template-desc">Interaction between objects over time</div>
+                    </div>
+                    <div class="template-item" data-template="class">
+                        <div class="template-name"><i class="fas fa-cubes"></i> Class Diagram</div>
+                        <div class="template-desc">Object-oriented system structure</div>
+                    </div>
+                    <div class="template-item" data-template="state">
+                        <div class="template-name"><i class="fas fa-sitemap"></i> State Diagram</div>
+                        <div class="template-desc">State machines and transitions</div>
+                    </div>
+                    <div class="template-item" data-template="er">
+                        <div class="template-name"><i class="fas fa-database"></i> ER Diagram</div>
+                        <div class="template-desc">Database relationships</div>
                     </div>
                 </div>
 
-                <div class="toolbar" role="toolbar" aria-label="Chart controls">
-                    <div class="group">
-                        <label for="template">Template</label>
-                        <select id="template" title="Insert starter template">
-                            <option value="flowchart">Flowchart</option>
-                            <option value="sequence">Sequence diagram</option>
-                            <option value="class">Class diagram</option>
-                            <option value="state">State diagram</option>
-                            <option value="er">ER diagram</option>
-                            <option value="gantt">Gantt</option>
-                            <option value="journey">User Journey</option>
-                        </select>
-                        <button
-                            class="ghost"
-                            id="insertBtn"
-                            title="Insert template at cursor"
-                        >
-                            Insert
-                        </button>
+                <div class="template-category">
+                    <div class="category-title">Planning & Management</div>
+                    <div class="template-item" data-template="gantt">
+                        <div class="template-name"><i class="fas fa-calendar-alt"></i> Gantt Chart</div>
+                        <div class="template-desc">Project timeline and scheduling</div>
                     </div>
+                    <div class="template-item" data-template="journey">
+                        <div class="template-name"><i class="fas fa-route"></i> User Journey</div>
+                        <div class="template-desc">User experience mapping</div>
+                    </div>
+                    <div class="template-item" data-template="timeline">
+                        <div class="template-name"><i class="fas fa-clock"></i> Timeline</div>
+                        <div class="template-desc">Chronological events</div>
+                    </div>
+                    <div class="template-item" data-template="requirement">
+                        <div class="template-name"><i class="fas fa-tasks"></i> Requirement Diagram</div>
+                        <div class="template-desc">System requirements and specs</div>
+                    </div>
+                </div>
 
-                    <div class="group">
-                        <label for="scale">PNG Scale</label>
-                        <select id="scale">
+                <div class="template-category">
+                    <div class="category-title">Data Visualization</div>
+                    <div class="template-item" data-template="pie">
+                        <div class="template-name"><i class="fas fa-chart-pie"></i> Pie Chart</div>
+                        <div class="template-desc">Proportional data visualization</div>
+                    </div>
+                    <div class="template-item" data-template="quadrant">
+                        <div class="template-name"><i class="fas fa-th"></i> Quadrant Chart</div>
+                        <div class="template-desc">Four-quadrant analysis matrix</div>
+                    </div>
+                    <div class="template-item" data-template="xy">
+                        <div class="template-name"><i class="fas fa-chart-line"></i> XY Chart</div>
+                        <div class="template-desc">Line and bar charts</div>
+                    </div>
+                    <div class="template-item" data-template="sankey">
+                        <div class="template-name"><i class="fas fa-stream"></i> Sankey Diagram</div>
+                        <div class="template-desc">Flow and distribution</div>
+                    </div>
+                </div>
+
+                <div class="template-category">
+                    <div class="category-title">Specialized</div>
+                    <div class="template-item" data-template="git">
+                        <div class="template-name"><i class="fab fa-git-alt"></i> Git Graph</div>
+                        <div class="template-desc">Version control branches</div>
+                    </div>
+                    <div class="template-item" data-template="mindmap">
+                        <div class="template-name"><i class="fas fa-brain"></i> Mind Map</div>
+                        <div class="template-desc">Hierarchical idea mapping</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="split-container">
+                <!-- Editor Pane -->
+                <div class="pane pane-editor" id="editorPane">
+                    <div class="pane-header">
+                        <div class="pane-title">
+                            <i class="fas fa-code"></i>
+                            Editor
+                        </div>
+                        <div class="pane-actions">
+                            <button class="btn btn-icon" id="formatCode" title="Format Code (Alt+Shift+F)">
+                                <i class="fas fa-align-left"></i>
+                            </button>
+                            <button class="btn btn-icon" id="clearEditor" title="Clear Editor">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                            <button class="btn btn-icon" id="fullscreenEditor" title="Fullscreen (F11)">
+                                <i class="fas fa-expand"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="pane-content">
+                        <div id="editor-container"></div>
+                    </div>
+                </div>
+
+                <!-- Resizer -->
+                <div class="resizer" id="resizer"></div>
+
+                <!-- Preview Pane -->
+                <div class="pane pane-preview" id="previewPane">
+                    <div class="pane-header">
+                        <div class="pane-title">
+                            <i class="fas fa-eye"></i>
+                            Preview
+                        </div>
+                        <div class="pane-actions">
+                            <button class="btn btn-icon" id="centerPreview" title="Center Diagram">
+                                <i class="fas fa-compress"></i>
+                            </button>
+                            <button class="btn btn-icon" id="refreshPreview" title="Refresh (Ctrl+Enter)">
+                                <i class="fas fa-sync"></i>
+                            </button>
+                            <button class="btn btn-icon" id="fullscreenPreview" title="Fullscreen">
+                                <i class="fas fa-expand"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="pane-content">
+                        <div class="preview-container" id="previewContainer">
+                            <div class="preview-empty">
+                                <i class="fas fa-file-code" style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;"></i>
+                                <div>Start typing to see live preview</div>
+                            </div>
+                        </div>
+                        <div class="zoom-controls">
+                            <button class="zoom-btn" id="zoomOut"><i class="fas fa-minus"></i></button>
+                            <div class="zoom-level" id="zoomLevel">100%</div>
+                            <button class="zoom-btn" id="zoomIn"><i class="fas fa-plus"></i></button>
+                            <button class="zoom-btn" id="zoomReset" title="Reset Zoom"><i class="fas fa-undo"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status Bar -->
+            <div class="status-bar">
+                <div class="status-left">
+                    <div class="status-item">
+                        <i class="fas fa-circle-info"></i>
+                        <span id="statusMessage">Ready</span>
+                    </div>
+                    <div class="status-item" id="lineColumn">
+                        Ln 1, Col 1
+                    </div>
+                </div>
+                <div class="status-right">
+                    <div class="status-item">
+                        <i class="fas fa-save"></i>
+                        <span>Auto-save: ON</span>
+                    </div>
+                    <div class="status-item">
+                        <span id="renderTime"></span>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Keyboard Shortcuts Modal -->
+    <div class="modal" id="shortcutsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title"><i class="fas fa-keyboard"></i> Keyboard Shortcuts</div>
+                <button class="modal-close" onclick="closeModal('shortcutsModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="shortcut-grid">
+                    <div class="shortcut-item">
+                        <span class="shortcut-label">Render Diagram</span>
+                        <div class="shortcut-keys">
+                            <span class="key">Ctrl</span>
+                            <span class="key">Enter</span>
+                        </div>
+                    </div>
+                    <div class="shortcut-item">
+                        <span class="shortcut-label">Toggle Sidebar</span>
+                        <div class="shortcut-keys">
+                            <span class="key">Ctrl</span>
+                            <span class="key">B</span>
+                        </div>
+                    </div>
+                    <div class="shortcut-item">
+                        <span class="shortcut-label">Format Code</span>
+                        <div class="shortcut-keys">
+                            <span class="key">Alt</span>
+                            <span class="key">Shift</span>
+                            <span class="key">F</span>
+                        </div>
+                    </div>
+                    <div class="shortcut-item">
+                        <span class="shortcut-label">Toggle Theme</span>
+                        <div class="shortcut-keys">
+                            <span class="key">Ctrl</span>
+                            <span class="key">Shift</span>
+                            <span class="key">T</span>
+                        </div>
+                    </div>
+                    <div class="shortcut-item">
+                        <span class="shortcut-label">Settings</span>
+                        <div class="shortcut-keys">
+                            <span class="key">Ctrl</span>
+                            <span class="key">,</span>
+                        </div>
+                    </div>
+                    <div class="shortcut-item">
+                        <span class="shortcut-label">Shortcuts</span>
+                        <div class="shortcut-keys">
+                            <span class="key">Ctrl</span>
+                            <span class="key">/</span>
+                        </div>
+                    </div>
+                    <div class="shortcut-item">
+                        <span class="shortcut-label">Fullscreen Editor</span>
+                        <div class="shortcut-keys">
+                            <span class="key">F11</span>
+                        </div>
+                    </div>
+                    <div class="shortcut-item">
+                        <span class="shortcut-label">Export PNG</span>
+                        <div class="shortcut-keys">
+                            <span class="key">Ctrl</span>
+                            <span class="key">Shift</span>
+                            <span class="key">E</span>
+                        </div>
+                    </div>
+                    <div class="shortcut-item">
+                        <span class="shortcut-label">Copy to Clipboard</span>
+                        <div class="shortcut-keys">
+                            <span class="key">Ctrl</span>
+                            <span class="key">Shift</span>
+                            <span class="key">C</span>
+                        </div>
+                    </div>
+                    <div class="shortcut-item">
+                        <span class="shortcut-label">Zoom In</span>
+                        <div class="shortcut-keys">
+                            <span class="key">Ctrl</span>
+                            <span class="key">+</span>
+                        </div>
+                    </div>
+                    <div class="shortcut-item">
+                        <span class="shortcut-label">Zoom Out</span>
+                        <div class="shortcut-keys">
+                            <span class="key">Ctrl</span>
+                            <span class="key">-</span>
+                        </div>
+                    </div>
+                    <div class="shortcut-item">
+                        <span class="shortcut-label">Reset Zoom</span>
+                        <div class="shortcut-keys">
+                            <span class="key">Ctrl</span>
+                            <span class="key">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal" id="settingsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title"><i class="fas fa-gear"></i> Settings</div>
+                <button class="modal-close" onclick="closeModal('settingsModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="setting-item">
+                    <div class="setting-label">Auto-Save</div>
+                    <div class="setting-description">Automatically save your work to browser storage</div>
+                    <div class="setting-control">
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" id="autoSaveToggle" checked>
+                            <span>Enable auto-save</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-label">Live Rendering</div>
+                    <div class="setting-description">Render diagram as you type (with debounce)</div>
+                    <div class="setting-control">
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" id="liveRenderToggle" checked>
+                            <span>Enable live rendering</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-label">Render Delay</div>
+                    <div class="setting-description">Delay before rendering (milliseconds)</div>
+                    <div class="setting-control">
+                        <input type="range" id="renderDelay" min="100" max="2000" step="100" value="500" style="width: 200px;">
+                        <span id="renderDelayValue">500ms</span>
+                    </div>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-label">Default Export Scale</div>
+                    <div class="setting-description">Default scale for PNG exports</div>
+                    <div class="setting-control">
+                        <select class="select" id="defaultScale">
                             <option value="1">1×</option>
                             <option value="2">2×</option>
                             <option value="3">3×</option>
                             <option value="4">4×</option>
                             <option value="5">5×</option>
-                            <option value="6">6×</option>
-                            <option value="7">7×</option>
+                            <option value="6" selected>6×</option>
                             <option value="8">8×</option>
-                            <option value="9">9×</option>
                             <option value="10">10×</option>
                         </select>
-                        
-                        <div class="scale-display" id="scaleDisplay">
-                            <span>Scale:</span>
-                            <span class="scale-value" id="scaleValue">10</span>
-                            <span>×</span>
-                        </div>
-                        
-                        <button id="autoScale" class="auto" title="Auto-select optimal scale">
-                            Auto
+                    </div>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-label">Clear Storage</div>
+                    <div class="setting-description">Clear all saved diagrams and preferences</div>
+                    <div class="setting-control">
+                        <button class="btn btn-danger" id="clearStorage">
+                            <i class="fas fa-trash"></i> Clear All Data
                         </button>
-                        <button id="downloadPng" class="success">
-                            Download PNG
-                        </button>
-                        <button id="downloadSvg" class="ghost">
-                            Download SVG
-                        </button>
-                        <button id="resetBtn" class="danger">Reset</button>
                     </div>
                 </div>
             </div>
-        </header>
+        </div>
+    </div>
 
-        <main>
-            <div class="grid">
-                <section class="panel">
-                    <header><h2>Editor</h2></header>
-                    <div class="body">
-                        <textarea id="editor" spellcheck="false"></textarea>
-                        <div class="helper">
-                            <div>
-                                Live updates as you type. Press
-                                <span class="kbd">Ctrl</span> +
-                                <span class="kbd">Enter</span> to force render.
-                            </div>
-                            <div class="chips">
-                                <div
-                                    class="chip"
-                                    data-snippet="%%{init: { 'theme': 'dark' }}%%"
-                                >
-                                    Add init
-                                </div>
-                                <div
-                                    class="chip"
-                                    data-snippet="%%{config: { 'look': 'handDrawn' }}%%"
-                                >
-                                    Hand-drawn
-                                </div>
-                                <div
-                                    class="chip"
-                                    data-snippet="%%{config: { 'flowchart': { 'curve': 'basis' } }}%%"
-                                >
-                                    Smooth edges
-                                </div>
-                            </div>
-                        </div>
+    <script>
+        // Global Variables
+        let editor;
+        let currentZoom = 1;
+        let currentTheme = 'dark';
+        let renderTimeout;
+        let lastSvg = '';
+        let autoSave = true;
+        let liveRender = true;
+        let renderDelay = 500;
+        let isResizing = false;
+
+        // Initialize Mermaid
+        mermaid.initialize({
+            startOnLoad: false,
+            theme: 'dark',
+            securityLevel: 'loose',
+            fontFamily: 'Inter, sans-serif',
+        });
+
+        // Templates
+        const templates = {
+            flowchart: `flowchart TD
+    A[Start] --> B{Decision?}
+    B -->|Yes| C[Option 1]
+    B -->|No| D[Option 2]
+    C --> E[Result]
+    D --> E
+    E --> F[End]`,
+
+            sequence: `sequenceDiagram
+    participant User
+    participant System
+    participant Database
+
+    User->>System: Request data
+    activate System
+    System->>Database: Query
+    activate Database
+    Database-->>System: Return results
+    deactivate Database
+    System-->>User: Display data
+    deactivate System`,
+
+            class: `classDiagram
+    class Animal {
+        +String name
+        +int age
+        +makeSound()
+    }
+    class Dog {
+        +String breed
+        +bark()
+    }
+    class Cat {
+        +String color
+        +meow()
+    }
+    Animal <|-- Dog
+    Animal <|-- Cat`,
+
+            state: `stateDiagram-v2
+    [*] --> Idle
+    Idle --> Processing : Start
+    Processing --> Success : Complete
+    Processing --> Error : Fail
+    Success --> [*]
+    Error --> Idle : Retry`,
+
+            er: `erDiagram
+    CUSTOMER ||--o{ ORDER : places
+    ORDER ||--|{ LINE-ITEM : contains
+    CUSTOMER {
+        string id PK
+        string name
+        string email
+    }
+    ORDER {
+        string id PK
+        date orderDate
+        string status
+    }
+    LINE-ITEM {
+        string id PK
+        int quantity
+        decimal price
+    }`,
+
+            gantt: `gantt
+    title Project Timeline
+    dateFormat YYYY-MM-DD
+    section Planning
+    Research           :done, des1, 2024-01-01, 7d
+    Requirements       :active, des2, 2024-01-08, 5d
+    section Development
+    Backend API        :des3, after des2, 14d
+    Frontend UI        :des4, after des3, 10d
+    Testing            :des5, after des4, 7d`,
+
+            journey: `journey
+    title User Shopping Journey
+    section Browse
+      Search products: 5: User
+      View details: 4: User
+    section Purchase
+      Add to cart: 5: User
+      Checkout: 3: User
+      Payment: 4: User, System
+    section Post-purchase
+      Receive confirmation: 5: System
+      Track order: 4: User`,
+
+            pie: `pie title Market Share
+    "Product A" : 45
+    "Product B" : 25
+    "Product C" : 20
+    "Product D" : 10`,
+
+            git: `gitGraph
+    commit
+    commit
+    branch develop
+    checkout develop
+    commit
+    commit
+    checkout main
+    merge develop
+    commit
+    branch feature
+    checkout feature
+    commit
+    checkout main
+    merge feature`,
+
+            mindmap: `mindmap
+  root((Project))
+    Planning
+      Research
+      Requirements
+      Timeline
+    Development
+      Backend
+      Frontend
+      Database
+    Testing
+      Unit Tests
+      Integration
+      E2E Tests
+    Deployment
+      Staging
+      Production
+      Monitoring`,
+
+            timeline: `timeline
+    title History of Web Development
+    1990 : HTML created
+    1995 : JavaScript released
+    1996 : CSS introduced
+    2006 : jQuery released
+    2010 : Angular.js released
+    2013 : React released
+    2014 : Vue.js released
+    2020 : Modern frameworks mature`,
+
+            quadrant: `quadrantChart
+    title Priority Matrix
+    x-axis Low Effort --> High Effort
+    y-axis Low Impact --> High Impact
+    quadrant-1 Quick Wins
+    quadrant-2 Major Projects
+    quadrant-3 Fill Ins
+    quadrant-4 Thankless Tasks
+    Feature A: [0.3, 0.8]
+    Feature B: [0.7, 0.9]
+    Bug Fix: [0.2, 0.3]
+    Refactor: [0.6, 0.4]`,
+
+            requirement: `requirementDiagram
+    requirement UserAuth {
+        id: 1
+        text: Users must be able to authenticate
+        risk: high
+        verifymethod: test
+    }
+    requirement DataEncryption {
+        id: 2
+        text: Data must be encrypted
+        risk: high
+        verifymethod: inspection
+    }
+    element LoginPage {
+        type: interface
+    }
+    LoginPage - satisfies -> UserAuth
+    LoginPage - satisfies -> DataEncryption`,
+
+            sankey: `sankey-beta
+
+%% source,target,value
+Electricity grid,Over generation / exports,104.453
+Electricity grid,Heating and cooling - homes,113.318
+Electricity grid,H2 conversion,27.14`,
+
+            xy: `xychart-beta
+    title "Sales Revenue"
+    x-axis [jan, feb, mar, apr, may, jun]
+    y-axis "Revenue (in $1000)" 0 --> 200
+    bar [50, 60, 70, 80, 90, 100]
+    line [20, 30, 40, 60, 80, 100]`
+        };
+
+        // Monaco Editor Initialization
+        require.config({
+            paths: {
+                'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs'
+            }
+        });
+
+        require(['vs/editor/editor.main'], function() {
+            editor = monaco.editor.create(document.getElementById('editor-container'), {
+                value: templates.flowchart,
+                language: 'plaintext',
+                theme: currentTheme === 'dark' ? 'vs-dark' : 'vs',
+                fontSize: 14,
+                lineHeight: 22,
+                minimap: { enabled: true },
+                scrollBeyondLastLine: false,
+                wordWrap: 'on',
+                automaticLayout: true,
+                suggestOnTriggerCharacters: true,
+                quickSuggestions: true,
+                tabSize: 2,
+            });
+
+            // Editor event listeners
+            editor.onDidChangeModelContent(() => {
+                updateLineColumn();
+                if (liveRender) {
+                    debouncedRender();
+                }
+                if (autoSave) {
+                    saveToLocalStorage();
+                }
+            });
+
+            // Initial render
+            renderDiagram();
+
+            // Load from localStorage
+            loadFromLocalStorage();
+        });
+
+        // Debounced render
+        function debouncedRender() {
+            clearTimeout(renderTimeout);
+            renderTimeout = setTimeout(() => {
+                renderDiagram();
+            }, renderDelay);
+        }
+
+        // Render Diagram
+        async function renderDiagram() {
+            const code = editor.getValue().trim();
+            const container = document.getElementById('previewContainer');
+
+            if (!code) {
+                container.innerHTML = `
+                    <div class="preview-empty">
+                        <i class="fas fa-file-code" style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;"></i>
+                        <div>Start typing to see live preview</div>
                     </div>
-                </section>
+                `;
+                updateStatus('Ready');
+                return;
+            }
 
-                <section class="panel">
-                    <header><h2>Preview</h2></header>
-                    <div class="body">
-                        <div
-                            id="preview"
-                            class="preview-wrap"
-                            aria-live="polite"
-                            aria-busy="false"
-                        ></div>
-                        <div class="status" id="status">Ready.</div>
+            updateStatus('Rendering...', 'info');
+            const startTime = performance.now();
+
+            try {
+                const { svg } = await mermaid.render('preview-svg', code);
+                lastSvg = svg;
+
+                container.innerHTML = `<div class="preview-content" id="previewContent">${svg}</div>`;
+                applyZoom();
+
+                const renderTime = (performance.now() - startTime).toFixed(0);
+                document.getElementById('renderTime').textContent = `${renderTime}ms`;
+                updateStatus('Rendered successfully', 'success');
+
+            } catch (error) {
+                console.error(error);
+                container.innerHTML = `
+                    <div class="preview-empty" style="color: var(--accent-danger);">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 48px; margin-bottom: 16px;"></i>
+                        <div style="font-weight: 600; margin-bottom: 8px;">Render Error</div>
+                        <div style="font-size: 12px; opacity: 0.8; max-width: 400px;">${error.message || error}</div>
                     </div>
-                </section>
-            </div>
+                `;
+                updateStatus('Render failed', 'error');
+            }
+        }
 
-            <p class="footer-note">
-                Tip: For very large diagrams, keep shapes/labels concise. If you
-                ever hit a "maximum text size" error, split the diagram into
-                sub-graphs or remove unused whitespace/comments.
-            </p>
-        </main>
+        // Update Status
+        function updateStatus(message, type = '') {
+            const statusEl = document.getElementById('statusMessage');
+            statusEl.textContent = message;
+            statusEl.className = type ? `status-${type}` : '';
+        }
 
-        <script>
-            // ---------- Mermaid setup ----------
+        // Update Line/Column
+        function updateLineColumn() {
+            const position = editor.getPosition();
+            document.getElementById('lineColumn').textContent = `Ln ${position.lineNumber}, Col ${position.column}`;
+        }
+
+        // Zoom Functions
+        function applyZoom() {
+            const content = document.getElementById('previewContent');
+            if (content) {
+                content.style.transform = `scale(${currentZoom})`;
+            }
+            document.getElementById('zoomLevel').textContent = `${Math.round(currentZoom * 100)}%`;
+        }
+
+        document.getElementById('zoomIn').addEventListener('click', () => {
+            currentZoom = Math.min(currentZoom + 0.1, 3);
+            applyZoom();
+        });
+
+        document.getElementById('zoomOut').addEventListener('click', () => {
+            currentZoom = Math.max(currentZoom - 0.1, 0.3);
+            applyZoom();
+        });
+
+        document.getElementById('zoomReset').addEventListener('click', () => {
+            currentZoom = 1;
+            applyZoom();
+        });
+
+        document.getElementById('centerPreview').addEventListener('click', () => {
+            currentZoom = 1;
+            applyZoom();
+            document.getElementById('previewContainer').scrollTop = 0;
+            document.getElementById('previewContainer').scrollLeft = 0;
+        });
+
+        // Theme Toggle
+        document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+
+        function toggleTheme() {
+            currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.body.setAttribute('data-theme', currentTheme);
+
+            if (editor) {
+                monaco.editor.setTheme(currentTheme === 'dark' ? 'vs-dark' : 'vs');
+            }
+
+            // Update Mermaid theme
             mermaid.initialize({
                 startOnLoad: false,
-                securityLevel: "loose", // allow links/downloads inside SVG if needed
-                theme: "dark",
-                themeVariables: {
-                    background: "#0b1220",
-                    primaryColor: "#0b1220",
-                    primaryTextColor: "#e5e7eb",
-                    lineColor: "#60a5fa",
-                    edgeLabelBackground: "#0b1220",
-                    clusterBkg: "#0f172a",
-                    clusterBorder: "#2563eb",
-                    noteBkgColor: "#0f172a",
-                    noteTextColor: "#cbd5e1",
-                },
-                flowchart: {
-                    useMaxWidth: true,
-                    htmlLabels: true,
-                    curve: "linear",
-                },
-                sequence: { mirrorActors: false, showSequenceNumbers: false },
-                er: { useMaxWidth: true },
-                fontFamily: "Inter, ui-sans-serif, system-ui",
+                theme: currentTheme === 'dark' ? 'dark' : 'default',
+                securityLevel: 'loose',
+                fontFamily: 'Inter, sans-serif',
             });
 
-            // Light mode Mermaid config
-            const lightMermaidConfig = {
-                startOnLoad: false,
-                securityLevel: "loose",
-                theme: "default",
-                themeVariables: {
-                    background: "#ffffff",
-                    primaryColor: "#ffffff",
-                    primaryTextColor: "#1e293b",
-                    lineColor: "#3b82f6",
-                    edgeLabelBackground: "#f8fafc",
-                    clusterBkg: "#f1f5f9",
-                    clusterBorder: "#3b82f6",
-                    noteBkgColor: "#f1f5f9",
-                    noteTextColor: "#475569",
-                },
-                flowchart: {
-                    useMaxWidth: true,
-                    htmlLabels: true,
-                    curve: "linear",
-                },
-                sequence: { mirrorActors: false, showSequenceNumbers: false },
-                er: { useMaxWidth: true },
-                fontFamily: "Inter, ui-sans-serif, system-ui",
-            };
+            renderDiagram();
+        }
 
-            // ---------- Elements ----------
-            const editor = document.getElementById("editor");
-            const preview = document.getElementById("preview");
-            const statusEl = document.getElementById("status");
-            const templateSel = document.getElementById("template");
-            const insertBtn = document.getElementById("insertBtn");
-            const resetBtn = document.getElementById("resetBtn");
-            const downloadBtn = document.getElementById("downloadPng");
-            const downloadSvgBtn = document.getElementById("downloadSvg");
-            const scaleSel = document.getElementById("scale");
-            const autoScaleBtn = document.getElementById("autoScale");
-            const scaleDisplay = document.getElementById("scaleDisplay");
-            const scaleValue = document.getElementById("scaleValue");
-            const chips = document.querySelectorAll(".chip");
-            const themeToggle = document.getElementById("themeToggle");
-            const body = document.body;
-            const subTitle = document.querySelector(".sub");
+        // Sidebar Toggle
+        document.getElementById('toggleSidebar').addEventListener('click', () => {
+            document.getElementById('sidebar').classList.toggle('collapsed');
+        });
 
-            let lastSVG = "";
-            let lastTitle = "mermaid-chart";
-            let currentTheme = "dark";
-            let autoScaleEnabled = true;
-            let lastCalculatedScale = 10;
+        document.getElementById('closeSidebar').addEventListener('click', () => {
+            document.getElementById('sidebar').classList.add('collapsed');
+        });
 
-            // ---------- Templates ----------
-            const TEMPLATES = {
-                flowchart: `flowchart TD
-  A[Start] --> B{Is it big?}
-  B -- Yes --> C[Split into subgraphs]
-  B -- No --> D[Render directly]
-  C --> E[Preview]
-  D --> E[Preview]
-  E --> F{Export?}
-  F -- PNG --> G[Download high-res PNG]
-  F -- SVG --> H[Download SVG]`,
-
-                sequence: `sequenceDiagram
-  autonumber
-  participant U as User
-  participant P as Previewer
-  U->>P: Type Mermaid code
-  activate P
-  P-->>U: Live render
-  deactivate P`,
-
-                class: `classDiagram
-  class Previewer {
-    +render(code)
-    +downloadPNG(scale)
-    +downloadSVG()
-  }
-  class Editor {
-    +value : string
-    +onInput()
-  }
-  Editor --> Previewer`,
-
-                state: `stateDiagram-v2
-  [*] --> Idle
-  Idle --> Editing: input
-  Editing --> Rendering: debounce
-  Rendering --> Preview: success
-  Rendering --> Error: parse fail
-  Error --> Editing: fix`,
-
-                er: `erDiagram
-  USERS ||--o{ DIAGRAMS : creates
-  DIAGRAMS {
-    string id PK
-    string title
-    text content
-  }`,
-
-                gantt: `gantt
-  title Build Mermaid Previewer
-  dateFormat  YYYY-MM-DD
-  section Scoping
-  Design UI           :done,    des1, 2025-08-01, 3d
-  section Dev
-  Editor + Preview    :active,  dev1, 2025-08-04, 5d
-  Export (PNG/SVG)    :         dev2, after dev1, 3d`,
-
-                journey: `journey
-  title Authoring experience
-  section Compose
-    Write code: 5: User
-    Auto preview: 4: App
-  section Export
-    Download PNG: 5: App
-    Download SVG: 5: App`,
-            };
-
-            // ---------- Helpers ----------
-            function debounce(fn, wait = 300) {
-                let t;
-                return (...args) => {
-                    clearTimeout(t);
-                    t = setTimeout(() => fn(...args), wait);
-                };
-            }
-
-            function setStatus(msg, type = "") {
-                statusEl.innerHTML = msg;
-                statusEl.className = "status" + (type ? " " + type : "");
-            }
-
-            function sanitizeTitle(str) {
-                return (str || "mermaid-chart")
-                    .toLowerCase()
-                    .replace(/[^a-z0-9\-]+/g, "-")
-                    .replace(/^-+|-+$/g, "");
-            }
-
-            // ---------- Auto Scale Calculation ----------
-            function calculateOptimalScale(svgText) {
-                const { width, height } = getSvgDimensions(svgText);
-                
-                // Browser canvas size limits (conservative estimate)
-                const maxCanvasSize = 16000; // Conservative limit for most browsers
-                
-                // Calculate the maximum scale that fits within browser limits
-                const maxScaleByWidth = Math.floor(maxCanvasSize / width);
-                const maxScaleByHeight = Math.floor(maxCanvasSize / height);
-                
-                // Use the smaller of the two to ensure both dimensions fit
-                let optimalScale = Math.min(maxScaleByWidth, maxScaleByHeight);
-                
-                // Clamp between 1 and 10
-                optimalScale = Math.max(1, Math.min(10, optimalScale));
-                
-                return optimalScale;
-            }
-            
-            function updateScaleDisplay() {
-                if (autoScaleEnabled) {
-                    scaleValue.textContent = lastCalculatedScale;
-                    scaleDisplay.classList.remove("manual");
-                    scaleSel.value = lastCalculatedScale;
-                } else {
-                    const selectedScale = parseInt(scaleSel.value, 10);
-                    scaleValue.textContent = selectedScale;
-                    scaleDisplay.classList.add("manual");
+        // Template Insertion
+        document.querySelectorAll('.template-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const template = item.dataset.template;
+                if (templates[template]) {
+                    editor.setValue(templates[template]);
+                    renderDiagram();
+                    showToast('Template inserted', 'success');
                 }
+            });
+        });
+
+        document.getElementById('insertTemplate').addEventListener('click', () => {
+            const type = document.getElementById('diagramType').value;
+            if (templates[type]) {
+                editor.setValue(templates[type]);
+                renderDiagram();
+                showToast('Template inserted', 'success');
+            }
+        });
+
+        // Template Search
+        document.getElementById('templateSearch').addEventListener('input', (e) => {
+            const search = e.target.value.toLowerCase();
+            document.querySelectorAll('.template-item').forEach(item => {
+                const name = item.querySelector('.template-name').textContent.toLowerCase();
+                const desc = item.querySelector('.template-desc').textContent.toLowerCase();
+                item.style.display = (name.includes(search) || desc.includes(search)) ? 'block' : 'none';
+            });
+        });
+
+        // Export Functions
+        document.getElementById('exportPng').addEventListener('click', exportPNG);
+        document.getElementById('exportSvg').addEventListener('click', exportSVG);
+        document.getElementById('exportPdf').addEventListener('click', exportPDF);
+
+        function exportSVG() {
+            if (!lastSvg) {
+                showToast('Nothing to export', 'error');
+                return;
             }
 
-            // ---------- Theme Switching ----------
-            function toggleTheme() {
-                currentTheme = currentTheme === "dark" ? "light" : "dark";
-                body.setAttribute("data-theme", currentTheme);
+            const blob = new Blob([lastSvg], { type: 'image/svg+xml' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'diagram.svg';
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('SVG exported successfully', 'success');
+        }
 
-                // Update Mermaid config based on theme
-                if (currentTheme === "light") {
-                    mermaid.initialize(lightMermaidConfig);
-                    subTitle.textContent =
-                        "Light mode • Blue accent • Auto-scale PNG export";
-                } else {
-                    mermaid.initialize({
-                        startOnLoad: false,
-                        securityLevel: "loose",
-                        theme: "dark",
-                        themeVariables: {
-                            background: "#0b1220",
-                            primaryColor: "#0b1220",
-                            primaryTextColor: "#e5e7eb",
-                            lineColor: "#60a5fa",
-                            edgeLabelBackground: "#0b1220",
-                            clusterBkg: "#0f172a",
-                            clusterBorder: "#2563eb",
-                            noteBkgColor: "#0f172a",
-                            noteTextColor: "#cbd5e1",
-                        },
-                        flowchart: {
-                            useMaxWidth: true,
-                            htmlLabels: true,
-                            curve: "linear",
-                        },
-                        sequence: {
-                            mirrorActors: false,
-                            showSequenceNumbers: false,
-                        },
-                        er: { useMaxWidth: true },
-                        fontFamily: "Inter, ui-sans-serif, system-ui",
-                    });
-                    subTitle.textContent =
-                        "Dark mode • Blue accent • Auto-scale PNG export";
-                }
-
-                // Re-render the diagram with the new theme
-                renderMermaid(editor.value);
+        function exportPNG() {
+            if (!lastSvg) {
+                showToast('Nothing to export', 'error');
+                return;
             }
 
-            // ---------- Rendering ----------
-            async function renderMermaid(code) {
-                if (!code || !code.trim()) {
-                    preview.innerHTML =
-                        '<div style="opacity:.6; text-align:center; padding:40px">Start typing Mermaid code…</div>';
-                    lastSVG = "";
-                    setStatus("Ready.");
-                    return;
-                }
-                setStatus("Rendering…");
-                preview.setAttribute("aria-busy", "true");
+            const scale = parseInt(document.getElementById('defaultScale').value);
+            const svgElement = document.querySelector('#previewContent svg');
 
-                try {
-                    // Use a unique id each render to avoid cache collisions
-                    const { svg } = await mermaid.render(
-                        "mmd-" + Math.random().toString(36).slice(2),
-                        code
-                    );
-                    lastSVG = svg;
-                    // Wrap in a responsive container
-                    preview.innerHTML = svg;
-                    // Guess a filename title from first non-directive line
-                    const firstLine =
-                        code
-                            .split("\n")
-                            .find((l) => !l.trim().startsWith("%%")) ||
-                        "mermaid-chart";
-                    lastTitle = sanitizeTitle(firstLine.slice(0, 60));
-                    
-                    // Calculate optimal scale when auto mode is enabled
-                    if (autoScaleEnabled && svg) {
-                        lastCalculatedScale = calculateOptimalScale(svg);
-                        updateScaleDisplay();
-                    }
-                    
-                    setStatus('<span class="ok">Rendered.</span>');
-                } catch (err) {
-                    console.error(err);
-                    let msg = String(err && err.message ? err.message : err);
-                    if (/text size/i.test(msg)) {
-                        msg +=
-                            " — Consider splitting the diagram or shortening labels.";
-                    }
-                    preview.innerHTML =
-                        '<div style="color:#fca5a5; white-space:pre-wrap; padding:10px">Error:\n' +
-                        msg +
-                        "</div>";
-                    setStatus('<span class="err">Failed to render.</span>');
-                    lastSVG = "";
-                } finally {
-                    preview.removeAttribute("aria-busy");
-                }
+            if (!svgElement) {
+                showToast('No diagram to export', 'error');
+                return;
             }
 
-            const debouncedRender = debounce(
-                () => renderMermaid(editor.value),
-                400
-            );
+            const bbox = svgElement.getBBox();
+            const width = bbox.width * scale;
+            const height = bbox.height * scale;
 
-            // ---------- Export ----------
-            function getSvgDimensions(svgText) {
-                // Extract viewBox if present, else width/height attributes
-                const m = svgText.match(/viewBox="([\d.\-\s]+)"/i);
-                if (m) {
-                    const [, , w, h] = m[1].split(/\s+/).map(Number);
-                    return { width: w, height: h };
-                }
-                const mw = svgText.match(/width="([\d.]+)"/i);
-                const mh = svgText.match(/height="([\d.]+)"/i);
-                return {
-                    width: mw ? parseFloat(mw[1]) : 1200,
-                    height: mh ? parseFloat(mh[1]) : 800,
-                };
-            }
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
 
-            // ✅ FIXED: Improved PNG export with canvas size limits
-            function svgToPng(
-                svgText,
-                scale = 10,
-                filename = "chart.png",
-                bg = "#0b1220"
-            ) {
-                const { width, height } = getSvgDimensions(svgText);
-                
-                // Check for browser canvas size limits
-                const maxCanvasSize = 32767; // Most browsers have this limit
-                const scaledWidth = Math.max(1, Math.round(width * scale));
-                const scaledHeight = Math.max(1, Math.round(height * scale));
-                
-                if (scaledWidth > maxCanvasSize || scaledHeight > maxCanvasSize) {
-                    alert(`Canvas dimensions (${scaledWidth}×${scaledHeight}) exceed browser limits. Try a lower scale.`);
-                    return;
-                }
-                
-                const svgDataUrl =
-                    "data:image/svg+xml;charset=utf-8," +
-                    encodeURIComponent(svgText);
-                const img = new Image();
-                img.crossOrigin = "anonymous";
-                img.decoding = "sync";
-                
-                img.onload = () => {
-                    const canvas = document.createElement("canvas");
-                    canvas.width = scaledWidth;
-                    canvas.height = scaledHeight;
-                    const ctx = canvas.getContext("2d");
-                    
-                    // Set background color based on theme
-                    ctx.fillStyle = currentTheme === "dark" ? "#0b1220" : "#ffffff";
-                    ctx.fillRect(0, 0, canvas.width, canvas.height);
-                    
-                    // Enable high-quality image rendering
-                    ctx.imageSmoothingEnabled = true;
-                    ctx.imageSmoothingQuality = "high";
-                    
-                    // Draw the SVG image
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                    
-                    // Convert to PNG blob and download
-                    canvas.toBlob((blob) => {
-                        if (!blob) {
-                            alert("Failed to create PNG. Try a lower scale or simpler diagram.");
-                            return;
-                        }
-                        
-                        const a = document.createElement("a");
-                        a.href = URL.createObjectURL(blob);
-                        a.download = filename;
-                        document.body.appendChild(a);
-                        a.click();
-                        document.body.removeChild(a);
-                        URL.revokeObjectURL(a.href);
-                    }, "image/png");
-                };
-                
-                img.onerror = () => {
-                    alert(
-                        "Could not rasterize SVG. Try a lower scale or simpler diagram."
-                    );
-                };
-                
-                img.src = svgDataUrl;
-            }
+            // Background
+            ctx.fillStyle = currentTheme === 'dark' ? '#0a0e1a' : '#ffffff';
+            ctx.fillRect(0, 0, width, height);
 
-            function downloadSVG(svgText, filename = "chart.svg") {
-                const blob = new Blob([svgText], {
-                    type: "image/svg+xml;charset=utf-8",
+            const img = new Image();
+            const svgBlob = new Blob([lastSvg], { type: 'image/svg+xml;charset=utf-8' });
+            const url = URL.createObjectURL(svgBlob);
+
+            img.onload = () => {
+                ctx.drawImage(img, 0, 0, width, height);
+                canvas.toBlob((blob) => {
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `diagram-${scale}x.png`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                    showToast('PNG exported successfully', 'success');
                 });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement("a");
-                a.href = url;
-                a.download = filename;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-            }
+            };
 
-            // ---------- UI wiring ----------
-            editor.addEventListener("input", debouncedRender);
-            editor.addEventListener("keydown", (e) => {
-                if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
-                    e.preventDefault();
-                    renderMermaid(editor.value);
-                }
+            img.src = url;
+        }
+
+        function exportPDF() {
+            showToast('PDF export coming soon!', 'info');
+        }
+
+        // Copy to Clipboard
+        document.getElementById('copyClipboard').addEventListener('click', () => {
+            const code = editor.getValue();
+            navigator.clipboard.writeText(code).then(() => {
+                showToast('Code copied to clipboard', 'success');
             });
+        });
 
-            insertBtn.addEventListener("click", () => {
-                const key = templateSel.value;
-                const snippet = TEMPLATES[key] || "";
-                insertAtCursor(editor, "\n" + snippet.trim() + "\n");
-                renderMermaid(editor.value);
+        // Share URL
+        document.getElementById('shareUrl').addEventListener('click', () => {
+            const code = editor.getValue();
+            const encoded = btoa(encodeURIComponent(code));
+            const url = `${window.location.origin}${window.location.pathname}?diagram=${encoded}`;
+
+            navigator.clipboard.writeText(url).then(() => {
+                showToast('Share URL copied to clipboard', 'success');
             });
+        });
 
-            chips.forEach((ch) =>
-                ch.addEventListener("click", () => {
-                    insertAtCursor(editor, ch.dataset.snippet + "\n");
-                    renderMermaid(editor.value);
-                })
-            );
-
-            resetBtn.addEventListener("click", () => {
-                editor.value = TEMPLATES.flowchart;
-                renderMermaid(editor.value);
-                editor.focus();
-            });
-
-            // Auto scale toggle
-            autoScaleBtn.addEventListener("click", () => {
-                autoScaleEnabled = !autoScaleEnabled;
-                
-                if (autoScaleEnabled) {
-                    autoScaleBtn.classList.remove("inactive");
-                    autoScaleBtn.classList.add("auto");
-                    // Recalculate optimal scale
-                    if (lastSVG) {
-                        lastCalculatedScale = calculateOptimalScale(lastSVG);
+        // Load from URL
+        function loadFromURL() {
+            const params = new URLSearchParams(window.location.search);
+            const diagram = params.get('diagram');
+            if (diagram) {
+                try {
+                    const decoded = decodeURIComponent(atob(diagram));
+                    if (editor) {
+                        editor.setValue(decoded);
+                        renderDiagram();
                     }
-                } else {
-                    autoScaleBtn.classList.remove("auto");
-                    autoScaleBtn.classList.add("inactive");
+                } catch (e) {
+                    console.error('Failed to load diagram from URL', e);
                 }
-                
-                updateScaleDisplay();
-            });
+            }
+        }
 
-            downloadBtn.addEventListener("click", () => {
-                if (!lastSVG) {
-                    alert("Nothing to export yet. Type some Mermaid code.");
+        // Local Storage
+        function saveToLocalStorage() {
+            try {
+                localStorage.setItem('mermaide-content', editor.getValue());
+                localStorage.setItem('mermaide-theme', currentTheme);
+            } catch (e) {
+                console.error('Failed to save to localStorage', e);
+            }
+        }
+
+        function loadFromLocalStorage() {
+            try {
+                const content = localStorage.getItem('mermaide-content');
+                const theme = localStorage.getItem('mermaide-theme');
+
+                if (content && editor && !window.location.search.includes('diagram=')) {
+                    editor.setValue(content);
+                }
+
+                if (theme && theme !== currentTheme) {
+                    toggleTheme();
+                }
+            } catch (e) {
+                console.error('Failed to load from localStorage', e);
+            }
+        }
+
+        // Modals
+        document.getElementById('shortcutsBtn').addEventListener('click', () => {
+            showModal('shortcutsModal');
+        });
+
+        document.getElementById('settingsBtn').addEventListener('click', () => {
+            showModal('settingsModal');
+        });
+
+        function showModal(id) {
+            document.getElementById(id).classList.add('active');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        // Close modal on outside click
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.classList.remove('active');
+                }
+            });
+        });
+
+        // Settings
+        document.getElementById('autoSaveToggle').addEventListener('change', (e) => {
+            autoSave = e.target.checked;
+            showToast(`Auto-save ${autoSave ? 'enabled' : 'disabled'}`, 'info');
+        });
+
+        document.getElementById('liveRenderToggle').addEventListener('change', (e) => {
+            liveRender = e.target.checked;
+            showToast(`Live render ${liveRender ? 'enabled' : 'disabled'}`, 'info');
+        });
+
+        document.getElementById('renderDelay').addEventListener('input', (e) => {
+            renderDelay = parseInt(e.target.value);
+            document.getElementById('renderDelayValue').textContent = `${renderDelay}ms`;
+        });
+
+        document.getElementById('clearStorage').addEventListener('click', () => {
+            if (confirm('Are you sure you want to clear all saved data?')) {
+                localStorage.clear();
+                showToast('Storage cleared', 'success');
+            }
+        });
+
+        document.getElementById('clearEditor').addEventListener('click', () => {
+            if (confirm('Clear editor content?')) {
+                editor.setValue('');
+                showToast('Editor cleared', 'info');
+            }
+        });
+
+        document.getElementById('refreshPreview').addEventListener('click', renderDiagram);
+
+        // Fullscreen Mode
+        document.getElementById('fullscreenEditor').addEventListener('click', () => {
+            const editorPane = document.getElementById('editorPane');
+            if (!document.fullscreenElement) {
+                editorPane.requestFullscreen().catch(err => {
+                    showToast('Fullscreen not supported', 'error');
+                });
+            } else {
+                document.exitFullscreen();
+            }
+        });
+
+        document.getElementById('fullscreenPreview').addEventListener('click', () => {
+            const previewPane = document.getElementById('previewPane');
+            if (!document.fullscreenElement) {
+                previewPane.requestFullscreen().catch(err => {
+                    showToast('Fullscreen not supported', 'error');
+                });
+            } else {
+                document.exitFullscreen();
+            }
+        });
+
+        // Format Code
+        document.getElementById('formatCode').addEventListener('click', () => {
+            const value = editor.getValue();
+            // Basic formatting: ensure proper indentation
+            const lines = value.split('\n');
+            let formatted = [];
+            let indentLevel = 0;
+
+            lines.forEach(line => {
+                const trimmed = line.trim();
+                if (!trimmed) {
+                    formatted.push('');
                     return;
                 }
-                
-                const scale = autoScaleEnabled ? 
-                    lastCalculatedScale : parseInt(scaleSel.value, 10);
-                    
-                svgToPng(
-                    lastSVG,
-                    scale,
-                    `${lastTitle || "mermaid-chart"}@${scale}x.png`,
-                    currentTheme === "dark" ? "#0b1220" : "#ffffff"
-                );
-            });
 
-            downloadSvgBtn.addEventListener("click", () => {
-                if (!lastSVG) {
-                    alert("Nothing to export yet. Type some Mermaid code.");
-                    return;
+                // Decrease indent for closing brackets/blocks
+                if (trimmed.match(/^(end|]|}|\))/)) {
+                    indentLevel = Math.max(0, indentLevel - 1);
                 }
-                downloadSVG(lastSVG, `${lastTitle || "mermaid-chart"}.svg`);
-            });
 
-            // Update scale display when manual scale is changed
-            scaleSel.addEventListener("change", () => {
-                if (!autoScaleEnabled) {
-                    updateScaleDisplay();
+                formatted.push('  '.repeat(indentLevel) + trimmed);
+
+                // Increase indent after opening brackets/blocks
+                if (trimmed.match(/(\{|\[|\()$/) ||
+                    trimmed.match(/^(flowchart|sequenceDiagram|classDiagram|stateDiagram|erDiagram|journey|gantt|pie|gitGraph|mindmap|timeline|quadrantChart|requirementDiagram)/)) {
+                    indentLevel++;
                 }
             });
 
-            themeToggle.addEventListener("click", toggleTheme);
+            editor.setValue(formatted.join('\n'));
+            showToast('Code formatted', 'success');
+        });
 
-            function insertAtCursor(textarea, text) {
-                const start = textarea.selectionStart;
-                const end = textarea.selectionEnd;
-                const before = textarea.value.substring(0, start);
-                const after = textarea.value.substring(end);
-                textarea.value = before + text + after;
-                const pos = start + text.length;
-                textarea.setSelectionRange(pos, pos);
-                textarea.focus();
+        // Toast Notifications
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+
+            const icons = {
+                success: 'fa-check-circle',
+                error: 'fa-exclamation-circle',
+                info: 'fa-info-circle'
+            };
+
+            toast.innerHTML = `
+                <i class="fas ${icons[type] || icons.info} toast-icon"></i>
+                <div class="toast-message">${message}</div>
+            `;
+
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.animation = 'slideInRight 0.3s ease reverse';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Keyboard Shortcuts
+        document.addEventListener('keydown', (e) => {
+            // Ctrl+Enter: Render
+            if (e.ctrlKey && e.key === 'Enter') {
+                e.preventDefault();
+                renderDiagram();
             }
 
-            // ---------- Boot ----------
-            editor.value = TEMPLATES.flowchart;
-            renderMermaid(editor.value);
-            updateScaleDisplay();
-        </script>
-    </body>
+            // Ctrl+B: Toggle Sidebar
+            if (e.ctrlKey && e.key === 'b') {
+                e.preventDefault();
+                document.getElementById('sidebar').classList.toggle('collapsed');
+            }
+
+            // Ctrl+Shift+T: Toggle Theme
+            if (e.ctrlKey && e.shiftKey && e.key === 'T') {
+                e.preventDefault();
+                toggleTheme();
+            }
+
+            // Ctrl+,: Settings
+            if (e.ctrlKey && e.key === ',') {
+                e.preventDefault();
+                showModal('settingsModal');
+            }
+
+            // Ctrl+/: Shortcuts
+            if (e.ctrlKey && e.key === '/') {
+                e.preventDefault();
+                showModal('shortcutsModal');
+            }
+
+            // Ctrl+Shift+E: Export PNG
+            if (e.ctrlKey && e.shiftKey && e.key === 'E') {
+                e.preventDefault();
+                exportPNG();
+            }
+
+            // Ctrl+Shift+C: Copy
+            if (e.ctrlKey && e.shiftKey && e.key === 'C') {
+                e.preventDefault();
+                document.getElementById('copyClipboard').click();
+            }
+
+            // Ctrl++: Zoom In
+            if (e.ctrlKey && (e.key === '+' || e.key === '=')) {
+                e.preventDefault();
+                document.getElementById('zoomIn').click();
+            }
+
+            // Ctrl+-: Zoom Out
+            if (e.ctrlKey && e.key === '-') {
+                e.preventDefault();
+                document.getElementById('zoomOut').click();
+            }
+
+            // Ctrl+0: Reset Zoom
+            if (e.ctrlKey && e.key === '0') {
+                e.preventDefault();
+                document.getElementById('zoomReset').click();
+            }
+        });
+
+        // Resizer
+        const resizer = document.getElementById('resizer');
+        const editorPane = document.getElementById('editorPane');
+        const previewPane = document.getElementById('previewPane');
+
+        resizer.addEventListener('mousedown', (e) => {
+            isResizing = true;
+            resizer.classList.add('resizing');
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isResizing) return;
+
+            const container = document.querySelector('.split-container');
+            const containerRect = container.getBoundingClientRect();
+            const newEditorWidth = ((e.clientX - containerRect.left) / containerRect.width) * 100;
+
+            if (newEditorWidth > 20 && newEditorWidth < 80) {
+                editorPane.style.width = `${newEditorWidth}%`;
+                previewPane.style.width = `${100 - newEditorWidth}%`;
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (isResizing) {
+                isResizing = false;
+                resizer.classList.remove('resizing');
+            }
+        });
+
+        // Initialize
+        window.addEventListener('load', () => {
+            loadFromURL();
+        });
+
+        // Mousewheel zoom in preview
+        document.getElementById('previewContainer').addEventListener('wheel', (e) => {
+            if (e.ctrlKey) {
+                e.preventDefault();
+                if (e.deltaY < 0) {
+                    currentZoom = Math.min(currentZoom + 0.1, 3);
+                } else {
+                    currentZoom = Math.max(currentZoom - 0.1, 0.3);
+                }
+                applyZoom();
+            }
+        });
+    </script>
+</body>
 </html>
